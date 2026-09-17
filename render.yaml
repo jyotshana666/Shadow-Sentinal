@@ -1,0 +1,82 @@
+# Render Blueprint Infrastructure-as-Code Specification for Shadow Sentinel
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  # 1. ML Microservice (Private Internal Service)
+  - type: pserv
+    name: shadowsentinel-ml
+    env: docker
+    dockerfilePath: ./ML/Dockerfile
+    dockerContext: ./ML
+    region: oregon
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 5000
+      - key: LOG_LEVEL
+        value: INFO
+
+  # 2. Spring Boot Backend REST API (Public Web Service)
+  - type: web
+    name: shadowsentinel-backend
+    env: docker
+    dockerfilePath: ./Backend/Dockerfile
+    dockerContext: ./Backend
+    region: oregon
+    plan: free
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: DB_URL
+        fromDatabase:
+          name: shadowsentinel-db
+          property: connectionString
+      - key: DB_USERNAME
+        fromDatabase:
+          name: shadowsentinel-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: shadowsentinel-db
+          property: password
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRATION
+        value: "86400000"
+      - key: FRONTEND_ORIGIN
+        fromService:
+          type: web
+          name: shadowsentinel-frontend
+          property: url
+      - key: ML_SERVICE_URL
+        fromService:
+          type: pserv
+          name: shadowsentinel-ml
+          property: hostport
+
+  # 3. React Frontend SPA (Static Site)
+  - type: web
+    name: shadowsentinel-frontend
+    env: static
+    rootDir: Frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        fromService:
+          type: web
+          name: shadowsentinel-backend
+          property: url
+          append: /api/v1
+
+databases:
+  # 4. Managed PostgreSQL Database
+  - name: shadowsentinel-db
+    databaseName: SHADOW_SENTINEL
+    user: postgres
+    region: oregon
+    plan: free
