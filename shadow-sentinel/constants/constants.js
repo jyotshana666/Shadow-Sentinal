@@ -4,9 +4,26 @@
  * @description Frozen configuration object for ShadowSentinel extension.
  * All values are centralized here; no functions or logic.
  */
+const ENV = 'development'; // Change to 'testing' or 'production' for builds
+const ENV_CONFIG = {
+  development: {
+    API_BASE_URL: 'http://localhost:8080/api/v1',
+    DEBUG: true
+  },
+  testing: {
+    API_BASE_URL: 'https://test-api.shadowsentinel.internal/api/v1',
+    DEBUG: true
+  },
+  production: {
+    API_BASE_URL: 'https://api.shadowsentinel.com/api/v1',
+    DEBUG: false
+  }
+};
+
 const CONFIG = Object.freeze({
-  DEBUG: false,
-  API_BASE_URL: 'https://api.shadowsentinel.internal',
+  ENV: ENV,
+  DEBUG: ENV_CONFIG[ENV].DEBUG,
+  API_BASE_URL: ENV_CONFIG[ENV].API_BASE_URL,
   SYNC_ALARM_NAME: 'syncSessions',
   BLOCK_CHECK_ALARM_NAME: 'checkBlockedDomains',
   SYNC_INTERVAL_MINUTES: 0.5,
