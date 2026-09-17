@@ -14,9 +14,11 @@ jspm_packages/
 .env.*
 !.env.example
 
-# Extension builds
+# Extension & Java builds
 dist/
 build/
+target/
+*.jar
 *.zip
 *.crx
 
