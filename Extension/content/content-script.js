@@ -53,6 +53,13 @@ function enforceBlockIfNeeded() {
   });
 }
 
+function getClassName(element) {
+  if (!element) return '';
+  if (typeof element.className === 'string') return element.className;
+  if (element.className && typeof element.className.baseVal === 'string') return element.className.baseVal;
+  return element.getAttribute ? (element.getAttribute('class') || '') : '';
+}
+
 /**
  * @description Collects UI signals according to specification and sends them to background.
  */
@@ -60,9 +67,10 @@ function collectUISignals() {
   // PRIVACY: never read actual text/value content
   const hasChatInput = !!document.querySelector('textarea, input[type="text"], [role="textbox"]');
   const hasStreamingDiv = !!Array.from(document.querySelectorAll('*')).find(el => {
-    const classMatch = /response|output|answer|message|stream|chat/i.test(el.className);
-    const ariaLive = el.getAttribute('aria-live') !== null;
-    const dataMessage = el.hasAttribute('data-message');
+    const className = getClassName(el);
+    const classMatch = /response|output|answer|message|stream|chat/i.test(className);
+    const ariaLive = el.getAttribute && el.getAttribute('aria-live') !== null;
+    const dataMessage = el.hasAttribute && el.hasAttribute('data-message');
     return classMatch || ariaLive || dataMessage;
   });
   const titleLower = document.title.toLowerCase();
@@ -70,14 +78,16 @@ function collectUISignals() {
   const hasAiTermsInTitle = aiTitleTerms.some(term => titleLower.includes(term));
   const metaElements = document.querySelectorAll('meta[name]');
   const hasAiTermsInMeta = Array.from(metaElements).some(meta => {
-    const name = meta.getAttribute('name');
+    const name = meta.getAttribute ? meta.getAttribute('name') : null;
     return aiTitleTerms.some(term => name && name.toLowerCase().includes(term));
   });
   const detectedAiClassesSet = new Set();
   const classKeywords = ['__chat','message-bubble','response-container','chat-container','prompt-input','ai-response','doubt-box','ask-ai','generate-btn','chat-window','copilot-panel','assistant-message','user-message','chat-input','ai-message','bot-message','typing-indicator'];
   document.querySelectorAll('*').forEach(el => {
+    const className = getClassName(el);
+    const classes = className.split(/\s+/).filter(Boolean);
     classKeywords.forEach(kw => {
-      if (el.classList && Array.from(el.classList).some(cls => cls.includes(kw))) {
+      if (classes.some(cls => cls.includes(kw))) {
         detectedAiClassesSet.add(kw);
       }
     });

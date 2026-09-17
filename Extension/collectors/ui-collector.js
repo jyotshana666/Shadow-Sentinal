@@ -1,4 +1,9 @@
-// collectors/ui-collector.js
+function getClassName(element) {
+  if (!element) return '';
+  if (typeof element.className === 'string') return element.className;
+  if (element.className && typeof element.className.baseVal === 'string') return element.className.baseVal;
+  return element.getAttribute ? (element.getAttribute('class') || '') : '';
+}
 
 /**
  * @description Collects UI signals from the page DOM.
@@ -15,9 +20,10 @@ function collectUiSignals() {
   let hasStreamingDiv = false;
   const streamingKeywords = /response|output|answer|message|stream|chat/i;
   document.querySelectorAll(streamingDivSelector).forEach(el => {
-    if (streamingKeywords.test(el.className)) hasStreamingDiv = true;
-    if (el.getAttribute('aria-live')) hasStreamingDiv = true;
-    if (el.hasAttribute('data-message')) hasStreamingDiv = true;
+    const className = getClassName(el);
+    if (streamingKeywords.test(className)) hasStreamingDiv = true;
+    if (el.getAttribute && el.getAttribute('aria-live')) hasStreamingDiv = true;
+    if (el.hasAttribute && el.hasAttribute('data-message')) hasStreamingDiv = true;
   });
   // PRIVACY: attribute existence check only — attribute values never read
 
@@ -29,15 +35,16 @@ function collectUiSignals() {
   // hasAiTermsInMeta
   const metaElements = document.querySelectorAll('meta[name]');
   const hasAiTermsInMeta = Array.from(metaElements).some(meta => {
-    const name = meta.getAttribute('name').toLowerCase();
-    return CONFIG.AI_TITLE_KEYWORDS.includes(name);
+    const name = meta.getAttribute ? meta.getAttribute('name') : null;
+    return name && CONFIG.AI_TITLE_KEYWORDS.includes(name.toLowerCase());
   });
   // PRIVACY: meta tag NAME checked for existence — content never read
 
   // detectedAiClasses
   const detectedSet = new Set();
   document.querySelectorAll('*').forEach(el => {
-    const classes = el.className.split(/\s+/);
+    const className = getClassName(el);
+    const classes = className.split(/\s+/).filter(Boolean);
     classes.forEach(cls => {
       if (CONFIG.AI_CLASS_NAMES.includes(cls)) detectedSet.add(cls);
     });
