@@ -7,6 +7,7 @@ COPY src ./src
 RUN mvn package -DskipTests
 
 FROM eclipse-temurin:21-jre-alpine
+RUN apk add --no-cache curl
 WORKDIR /app
 EXPOSE 8080
 COPY --from=build /app/target/backend-1.0.0.jar app.jar
