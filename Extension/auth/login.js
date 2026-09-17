@@ -128,6 +128,18 @@ function clearErrors(formId) {
   }
 }
 
+const getApiBase = () => (window.CONFIG?.API_BASE_URL || 'http://localhost:8080/api/v1');
+
+function parseJwtClaim(jwt, claim) {
+  try {
+    if (!jwt || typeof jwt !== 'string') return null;
+    const payload = JSON.parse(atob(jwt.split('.')[1] || ''));
+    return payload[claim] || null;
+  } catch (e) {
+    return null;
+  }
+}
+
 async function handleLogin(e) {
   e.preventDefault();
   if (state.isAuthenticating) return;
@@ -148,7 +160,9 @@ async function handleLogin(e) {
   setLoadingState(btn, 'Signing in...', true);
   
   try {
-    const response = await fetch(`${API_BASE}/auth/login`, {
+    const apiBase = getApiBase();
+    if (window.CONFIG?.DEBUG) console.log('[SS] Extension signing in to:', `${apiBase}/auth/login`);
+    const response = await fetch(`${apiBase}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
@@ -158,21 +172,31 @@ async function handleLogin(e) {
       if (response.status === 401 || response.status === 403) {
         throw new Error('Incorrect email or password.');
       }
-      throw new Error('Unable to connect. Check your connection and try again.');
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.message || `Server error (${response.status}).`);
     }
     
     const data = await response.json();
-    if (data.token) {
+    const jwt = data.jwt || data.token;
+    if (jwt) {
+      const authObj = {
+        jwt: jwt,
+        userId: data.userId || parseJwtClaim(jwt, 'sub') || parseJwtClaim(jwt, 'userId'),
+        orgId: data.orgId || parseJwtClaim(jwt, 'orgId') || 'DEFAULT_ORG',
+        email: data.email || email,
+        role: data.role || 'USER'
+      };
       await new Promise(resolve => {
-        chrome.storage.local.set({ [CONFIG.STORAGE_KEYS.AUTH]: { jwt: data.token, email } }, resolve);
+        chrome.storage.local.set({ [CONFIG.STORAGE_KEYS.AUTH]: authObj }, resolve);
       });
       goToDashboard();
     } else {
-      throw new Error('Invalid server response.');
+      throw new Error('Invalid server response: JWT missing.');
     }
   } catch (err) {
-    if (err.message === 'Failed to fetch') {
-      setError('login-password-error', 'Unable to connect. Check your connection and try again.');
+    if (window.CONFIG?.DEBUG) console.error('[SS Login Error]', err);
+    if (err.message === 'Failed to fetch' || err.name === 'TypeError') {
+      setError('login-password-error', `Unable to connect to backend (${getApiBase()}). Check connection and try again.`);
     } else {
       setError('login-password-error', err.message);
     }

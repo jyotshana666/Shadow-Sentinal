@@ -82,8 +82,18 @@ function tryFinalize(tabId) {
   // Wait for tab close or inactivity to end session.
 }
 
+function parseJwtClaim(jwt, claim) {
+  try {
+    if (!jwt || typeof jwt !== 'string') return null;
+    const payload = JSON.parse(atob(jwt.split('.')[1] || ''));
+    return payload[claim] || null;
+  } catch (e) {
+    return null;
+  }
+}
+
 /** End session, merge metadata, classify, validate, enqueue. */
-function endSession(tabId) {
+async function endSession(tabId) {
   const s = activeSessions.get(tabId);
   if (!s) return;
   const meta = getMetadataSnapshot(tabId);
@@ -91,8 +101,29 @@ function endSession(tabId) {
   s.endTime = new Date().toISOString();
   s.durationSec = Math.round((new Date(s.endTime) - new Date(s.startTime)) / 1000);
   if (s.durationSec < CONFIG.MIN_SESSION_DURATION_SEC) { discardSession(tabId); return; }
+
+  // Re-verify auth info if missing
+  if (!s.userId || !s.orgId) {
+    try {
+      const authRes = await storageGet([CONFIG.STORAGE_KEYS.AUTH]);
+      const auth = authRes[CONFIG.STORAGE_KEYS.AUTH];
+      if (auth) {
+        s.userId = auth.userId || parseJwtClaim(auth.jwt, 'sub') || parseJwtClaim(auth.jwt, 'userId');
+        s.orgId = auth.orgId || parseJwtClaim(auth.jwt, 'orgId') || 'DEFAULT_ORG';
+      }
+    } catch (e) {}
+  }
+
   classifySession(s);
-  if (!validateSession(s)) { logError('Invalid session', s); discardSession(tabId); return; }
+  if (!validateSession(s)) {
+    if (!s.userId || !s.orgId) {
+      log('Extension session unauthenticated, skipping ingestion queue:', s.domain);
+    } else {
+      logError('Invalid session schema or duration:', s);
+    }
+    discardSession(tabId);
+    return;
+  }
   queueManager.enqueue(s);
   clearInactivityTimer(tabId);
   clearMetadataSession(tabId);
