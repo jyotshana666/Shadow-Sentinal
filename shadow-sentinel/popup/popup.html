@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ShadowSentinel Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div id="app-container">
+    <header class="app-header">
+      <div class="logo">
+        <div class="logo-box">SS</div>
+        <div class="brand-text">
+          <div class="brand-name">ShadowSentinel</div>
+          <div class="brand-subtitle">AI Governance</div>
+        </div>
+      </div>
+      <div class="account-menu">
+        <button id="btn-menu" class="icon-btn" aria-label="Menu">&ctdot;</button>
+        <div id="dropdown-menu" class="dropdown hidden">
+          <button id="btn-sync">Sync now</button>
+          <button id="btn-logout">Sign out</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="dashboard-content">
+      <div class="greeting-section">
+        <h1 class="greeting-title" id="greeting">Good evening</h1>
+        <p class="greeting-subtitle">Your workspace is protected.</p>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value" id="stat-events">0</div>
+          <div class="stat-label">AI events</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-alerts">0</div>
+          <div class="stat-label">Alerts</div>
+        </div>
+      </div>
+
+      <div class="activity-section">
+        <h2 class="section-title">Recent activity</h2>
+        <div class="activity-list" id="activity-list">
+          <div class="activity-item">
+            <div class="activity-dot"></div>
+            <div class="activity-content">
+              <div class="activity-title">Waiting for activity...</div>
+              <div class="activity-time">Just now</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../constants/constants.js"></script>
+  <script src="../utils/storage.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
