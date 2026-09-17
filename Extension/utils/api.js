@@ -38,7 +38,7 @@ async function apiLogin(email, password) {
  */
 async function apiSyncSessions(sessions, jwt) {
   try {
-    const response = await fetch(`${CONFIG.API_BASE_URL}/api/sessions/batch`, {
+    const response = await fetch(`${CONFIG.API_BASE_URL}/sessions/batch`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -67,7 +67,7 @@ async function apiSyncSessions(sessions, jwt) {
  */
 async function apiGetBlockedDomains(jwt) {
   try {
-    const response = await fetch(`${CONFIG.API_BASE_URL}/api/users/me/blocked-domains`, {
+    const response = await fetch(`${CONFIG.API_BASE_URL}/users/me/blocked-domains`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${jwt}`
