@@ -5,11 +5,11 @@ services:
   # 1. ML Microservice (Private Internal Service)
   - type: pserv
     name: shadowsentinel-ml
-    env: docker
+    runtime: docker
     dockerfilePath: ./ML/Dockerfile
     dockerContext: ./ML
     region: oregon
-    plan: free
+    plan: starter
     healthCheckPath: /health
     envVars:
       - key: PORT
@@ -20,7 +20,7 @@ services:
   # 2. Spring Boot Backend REST API (Public Web Service)
   - type: web
     name: shadowsentinel-backend
-    env: docker
+    runtime: docker
     dockerfilePath: ./Backend/Dockerfile
     dockerContext: ./Backend
     region: oregon
@@ -61,7 +61,7 @@ services:
   # 3. React Frontend SPA (Static Site)
   - type: web
     name: shadowsentinel-frontend
-    env: static
+    runtime: static
     rootDir: Frontend
     buildCommand: npm ci && npm run build
     staticPublishPath: ./dist
@@ -74,9 +74,9 @@ services:
           append: /api/v1
 
 databases:
-  # 4. Managed PostgreSQL Database
+  # 4. Managed PostgreSQL Database (Production Persistence)
   - name: shadowsentinel-db
     databaseName: SHADOW_SENTINEL
     user: postgres
     region: oregon
-    plan: free
+    plan: starter
