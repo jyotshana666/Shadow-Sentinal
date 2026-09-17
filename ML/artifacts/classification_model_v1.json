@@ -1,0 +1,18 @@
+{
+  "version": "classification-model-v1",
+  "description": "Hybrid Evidence & Feature Weight Model for AI Site Classification",
+  "trained_date": "2026-09-17",
+  "dataset_status": "NOT AVAILABLE \u2014 Built using baseline feature schemas; real evaluation requires labeled dataset",
+  "weights": {
+    "chat_input": 30.0,
+    "streaming_div": 25.0,
+    "ai_title": 20.0,
+    "ai_meta": 10.0,
+    "classes_present": 10.0,
+    "form_rate": 5.0
+  },
+  "thresholds": {
+    "ai_website_score": 50.0,
+    "monitored_score": 20.0
+  }
+}
