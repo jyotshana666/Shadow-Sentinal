@@ -107,9 +107,7 @@ mvn clean package
 ```bash
 mvn spring-boot:run
 ```
-4. On startup, `DataSeeder` automatically creates seed accounts if not present:
-   * **Admin:** `admin@shadowsentinel.com` / `Admin@123456`
-   * **Standard User:** `user@shadowsentinel.com` / `User@123456`
+4. On startup, `DataSeeder` automatically creates seed accounts if not present (Administrative and Standard User accounts). Default seeded passwords must be rotated upon first login or configured via environment variables.
 
 ## 11. Limitations & Status
 * **ML Model Integration:** The `ClassificationService` interface is implemented via `HeuristicClassificationServiceImpl` as a temporary baseline rule engine. The actual python/ML microservice integration boundary is defined and ready to be plugged in during Stage 3 (ML).

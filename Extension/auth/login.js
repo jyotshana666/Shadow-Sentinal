@@ -182,7 +182,7 @@ async function handleLogin(e) {
       const authObj = {
         jwt: jwt,
         userId: data.userId || parseJwtClaim(jwt, 'sub') || parseJwtClaim(jwt, 'userId'),
-        orgId: data.orgId || parseJwtClaim(jwt, 'orgId') || 'DEFAULT_ORG',
+        orgId: data.orgId || parseJwtClaim(jwt, 'orgId') || null,
         email: data.email || email,
         role: data.role || 'USER'
       };

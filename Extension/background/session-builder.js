@@ -109,7 +109,7 @@ async function endSession(tabId) {
       const auth = authRes[CONFIG.STORAGE_KEYS.AUTH];
       if (auth) {
         s.userId = auth.userId || parseJwtClaim(auth.jwt, 'sub') || parseJwtClaim(auth.jwt, 'userId');
-        s.orgId = auth.orgId || parseJwtClaim(auth.jwt, 'orgId') || 'DEFAULT_ORG';
+        s.orgId = auth.orgId || parseJwtClaim(auth.jwt, 'orgId') || null;
       }
     } catch (e) {}
   }

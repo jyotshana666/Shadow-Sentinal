@@ -66,7 +66,14 @@ public class BrowserActivityService {
 
                 session.setSessionId(dto.getSessionId());
                 session.setUserId(authenticatedUserId); // Always enforce authenticated principal ownership!
-                session.setOrgId(authenticatedOrgId != null ? authenticatedOrgId : "DEFAULT_ORG");
+                
+                String authoritativeOrgId = authenticatedOrgId;
+                if (authoritativeOrgId == null || authoritativeOrgId.isBlank()) {
+                    authoritativeOrgId = userRepository.findById(authenticatedUserId)
+                            .map(User::getOrgId)
+                            .orElse("DEFAULT_ORG");
+                }
+                session.setOrgId(authoritativeOrgId);
                 session.setDomain(dto.getDomain());
                 session.setStartTime(parseInstant(dto.getStartTime()));
                 session.setEndTime(parseInstant(dto.getEndTime()));
