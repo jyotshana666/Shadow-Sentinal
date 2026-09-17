@@ -1,0 +1,92 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: shadowsentinel-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME:-SHADOW_SENTINEL}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-SHADOW_SENTINEL}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - shadowsentinel-net
+
+  ml:
+    build:
+      context: ../ML
+      dockerfile: Dockerfile
+    container_name: shadowsentinel-ml
+    restart: always
+    environment:
+      PORT: 5000
+      LOG_LEVEL: INFO
+    ports:
+      - "5000:5000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - shadowsentinel-net
+
+  backend:
+    build:
+      context: ../Backend
+      dockerfile: Dockerfile
+    container_name: shadowsentinel-backend
+    restart: always
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-SHADOW_SENTINEL}
+      DB_USERNAME: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      JWT_SECRET: ${JWT_SECRET:-404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+      ML_SERVICE_URL: http://ml:5000
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ml:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    networks:
+      - shadowsentinel-net
+
+  frontend:
+    build:
+      context: ../Frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8080/api/v1}
+    container_name: shadowsentinel-frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - shadowsentinel-net
+
+networks:
+  shadowsentinel-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
