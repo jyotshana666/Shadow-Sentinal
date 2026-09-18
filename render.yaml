@@ -9,8 +9,7 @@ services:
     dockerfilePath: ./ML/Dockerfile
     dockerContext: ./ML
     region: oregon
-    plan: starter
-    healthCheckPath: /health
+    plan: 0.5c-512mb
     envVars:
       - key: PORT
         value: 5000
@@ -51,7 +50,7 @@ services:
         fromService:
           type: web
           name: shadowsentinel-frontend
-          property: url
+          envVarKey: RENDER_EXTERNAL_URL
       - key: ML_SERVICE_URL
         fromService:
           type: pserv
@@ -70,13 +69,11 @@ services:
         fromService:
           type: web
           name: shadowsentinel-backend
-          property: url
+          envVarKey: RENDER_EXTERNAL_URL
           append: /api/v1
 
 databases:
   # 4. Managed PostgreSQL Database (Production Persistence)
   - name: shadowsentinel-db
-    databaseName: SHADOW_SENTINEL
-    user: postgres
     region: oregon
-    plan: starter
+    plan: basic-256mb
