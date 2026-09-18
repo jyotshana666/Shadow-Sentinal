@@ -76,4 +76,4 @@ databases:
   # 4. Managed PostgreSQL Database (Production Persistence)
   - name: shadowsentinel-db
     region: oregon
-    plan: basic-256mb
+    plan: 0.1c-256mb
